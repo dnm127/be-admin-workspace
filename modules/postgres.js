@@ -19,7 +19,7 @@ module.exports = () => {
       return _.isFunction(mapFunc) ? mapFunc(dbResults) : dbResults; 
     } catch (err) {
       console.log('Error on query to Database', err);
-      throw e;
+      throw err;
     } finally {
       if (!_.isObject(dbTrans)) {
         transClient.release();

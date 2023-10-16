@@ -1,37 +1,39 @@
+const express = require("express");
+const cookieParser = require("cookie-parser");
+const { middlewareCorsHeader } = require("./middlewares")();
 
-const express = require('express');
+const PORT = 6065;
+
 const app = express();
-const cookieParser = require('cookie-parser');
-const path = require('path');
-require('dotenv').config({
+const path = require("path");
+require("dotenv").config({
   override: true,
-  path: path.join(__dirname, 'development.env')
+  path: path.join(__dirname, "development.env"),
 });
 
-const initSwagger = require('./modules/swagger/swagger');
-const initRouters = require('./routes');
+const initSwagger = require("./modules/swagger/swagger");
+const initRouters = require("./routes");
 
-// Build-in middlewares
 app.use(express.json());
 
-//TODO: Application-level middlwares
+//TODO: Application-level middleware
 
-// load the cookie-parsing middleware
 app.use(cookieParser());
 
-app.get('/', (req, res) => {
-  return res.status(200).send('You are welcome!');
+app.use(middlewareCorsHeader);
+
+app.get("/", (req, res) => {
+  return res.status(200).send({ message: "You are welcome!" });
 });
 
-app.pg = require('./modules/postgres')();
-app.dal = require('./dal')(app);
-app.bll = require('./bll')(app);
+app.pg = require("./modules/postgres")();
+app.dal = require("./dal")(app);
+app.bll = require("./bll")(app);
 
-app.listen(6065, function onListening() {
-    console.log('Listening to port ' + 6065);
+app.listen(PORT, function onListening() {
+  console.log("Listening to port " + PORT);
 });
 initSwagger(app, express);
 initRouters(app);
-
 
 //TODO: Add error-handling middlewares here
