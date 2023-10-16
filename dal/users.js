@@ -92,7 +92,6 @@ module.exports = (app) => {
   }
 
   async function createUser(body, dbClient = db) {
-    console.log("body", body);
     let errorMessage = "";
     let count = 0;
     let sql = ``;
@@ -170,5 +169,74 @@ module.exports = (app) => {
     return camelcaseKeys(resultQuery.rows, { deep: true });
   }
 
-  return { getUser, getUsers, getUserOrganizations, createUser };
+  async function getUserById(userId, dbClient = db) {
+    if (!userId) {
+      throw new Error("userId is required");
+    }
+
+    let sql = `SELECT * FROM sso_user WHERE user_id = '${userId}'`;
+    const resultQuery = await dbClient.query(sql);
+    return camelcaseKeys(resultQuery.rows, { deep: true });
+  }
+
+  async function deleteUser(userId, dbClient = db) {
+    if (!userId) {
+      throw new Error("userId is required");
+    }
+    const exitingUser = await getUserById(userId, dbClient);
+    if (exitingUser.length === 0) {
+      throw new Error(`user with id ${userId} does not exist`);
+    }
+    let sql = `DELETE FROM sso_user WHERE user_id = '${userId}';`;
+    const resultQuery = await dbClient.query(sql);
+    return camelcaseKeys(resultQuery.rows, { deep: true });
+  }
+
+  async function updateUser(userId, body, dbClient = db) {
+    const { username, password, email, kvp, user_settings, status } = body;
+    if (!userId) {
+      throw new Error("userId is required");
+    }
+    const exitingUser = await getUserById(userId, dbClient);
+    if (exitingUser.length === 0) {
+      throw new Error(`user with id ${userId} does not exist`);
+    }
+    let sql = ``;
+    sql += `
+      UPDATE sso_user SET
+    `;
+
+    if (username) {
+      sql += `username = '${username}',`;
+    }
+    if (username) {
+      sql += `password = '${password}',`;
+    }
+    if (email) {
+      sql += `email = '${email}',`;
+    }
+    if (kvp) {
+      sql += `kvp = '${JSON.stringify(kvp)}',`;
+    }
+    if (user_settings) {
+      sql += `user_settings = '${JSON.stringify(user_settings)}',`;
+    }
+    if (email) {
+      sql += `status = '${status}'`;
+    }
+    sql += `;`;
+
+    const resultQuery = await dbClient.query(sql);
+    return camelcaseKeys(resultQuery.rows, { deep: true });
+  }
+
+  return {
+    getUser,
+    getUsers,
+    getUserOrganizations,
+    createUser,
+    getUserById,
+    deleteUser,
+    updateUser,
+  };
 };
