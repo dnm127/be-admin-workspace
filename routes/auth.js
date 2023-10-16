@@ -1,4 +1,5 @@
 const express = require('express');
+const bcrypt = require('bcrypt');
 
 module.exports = function (app) {
   if (!app) {
@@ -12,16 +13,26 @@ module.exports = function (app) {
   routerAuth.post('/login', login);
 
   function login(req, res, next) {
-    const hardCodeUserName = 'mock-user';
-    const hardCodPpassword = 'mock123';
+    const username = req.body.username;
+    const password = req.body.password;
+    const hardCodeUserName = "mock-user";
+    const hardCodePassword = "mock123";
+    const saltRounds = 12;
+
     //TODO: Please hash the mock password with saltRounds = 12 and fill to hashPassword
-    let hashPassword = ''
+    let hashPassword = "";
+    if (hardCodeUserName === username) {
+      hashPassword = bcrypt.hashSync(hardCodePassword, saltRounds);
 
-    //TODO: Use the bcrypt to verify the req.body.username and req.body.password which should match the hashPassword above
-
-    // if success response HTTP 200 OK
-    // else response HTTP 400 Invalid Username or Password
-
-    return res.status(400).send('Invalid Username or Password');
+      //TODO: Use the bcrypt to verify the req.body.username and req.body.password which should match the hashPassword above
+      const validate = bcrypt.compareSync(password, hashPassword);
+      if (validate) {
+        res.status(200).send({ data: "Login successful" });
+      } else {
+        res.status(400).send({ data: "Invalid password" });
+      }
+    } else {
+      res.status(400).send({ data: "Invalid username" });
+    }
   }
 };
